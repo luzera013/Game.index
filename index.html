@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Click Empire</title>
+<style>
+  /* ── Google Font ── */
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap');
+
+  /* ── Variables ── */
+  :root {
+    --bg:       #090c14;
+    --surface:  #0f1422;
+    --card:     #141928;
+    --border:   #1e2740;
+    --accent:   #f0c040;
+    --accent2:  #e06820;
+    --green:    #30d48a;
+    --blue:     #3a8ffd;
+    --purple:   #9b6dff;
+    --red:      #ff4d6a;
+    --text:     #d8e0f0;
+    --muted:    #4a5570;
+    --glow:     rgba(240,192,64,0.18);
+    --font-hd:  'Orbitron', monospace;
+    --font-mono:'Share Tech Mono', monospace;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Scanline overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── Grid layout ── */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header header"
+      "main   sidebar"
+      "footer footer";
+    min-height: 100vh;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 12px;
+    gap: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: var(--font-hd);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--glow);
+  }
+  .logo span { color: var(--accent2); }
+  .header-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .header-stats b { color: var(--text); }
+  .header-right { display: flex; gap: 8px; }
+  .btn-sm {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Main area ── */
+  main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 24px 0;
+    gap: 20px;
+  }
+
+  /* ── Money display ── */
+  .money-display {
+    text-align: center;
+    width: 100%;
+  }
+  .money-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .money-value {
+    font-family: var(--font-hd);
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--accent);
+    text-shadow: 0 0 30px var(--glow);
+    letter-spacing: 2px;
+    transition: transform .08s;
+    line-height: 1;
+  }
+  .money-value.bump { transform: scale(1.06); }
+  .money-sub {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .money-sub span { color: var(--green); }
+
+  /* ── Click button ── */
+  .click-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .click-btn {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #1e2d50, #0a0f1e);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 28px var(--glow), inset 0 0 20px rgba(240,192,64,0.06);
+    cursor: pointer;
+    font-family: var(--font-hd);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform .08s, box-shadow .08s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .click-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 0%, rgba(240,192,64,0.12), transparent 60%);
+  }
+  .click-btn:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 44px rgba(240,192,64,0.3), inset 0 0 20px rgba(240,192,64,0.1);
+  }
+  .click-btn:active {
+    transform: scale(0.93);
+    box-shadow: 0 0 12px var(--glow);
+  }
+  .click-icon { font-size: 44px; line-height: 1; }
+  .click-hint { font-size: 10px; color: var(--muted); }
+
+  /* ── Floating +$ text ── */
+  .float-text {
+    position: fixed;
+    font-family: var(--font-hd);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    pointer-events: none;
+    animation: floatUp 0.85s ease-out forwards;
+    z-index: 500;
+    text-shadow: 0 0 12px var(--glow);
+  }
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-72px) scale(0.7); }
+  }
+
+  /* ── Ripple ── */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(240,192,64,0.25);
+    animation: rippleOut 0.5s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes rippleOut {
+    0%   { transform: scale(0); opacity: 1; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+
+  /* ── Progress bars ── */
+  .progress-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .progress-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width .4s ease;
+  }
+  .fill-gold  { background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+  .fill-green { background: linear-gradient(90deg, #1a8a55, var(--green)); }
+  .fill-blue  { background: linear-gradient(90deg, #1a4fa0, var(--blue)); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    grid-area: sidebar;
+    padding: 24px 0 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    max-height: calc(100vh - 110px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .sidebar-title {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  /* ── Upgrade cards ── */
+  .upgrade-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upgrade-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 2px 0 0 2px;
+    transition: all .15s;
+  }
+  .upgrade-card.type-click::before  { background: var(--accent); }
+  .upgrade-card.type-auto::before   { background: var(--green); }
+  .upgrade-card.type-multi::before  { background: var(--blue); }
+  .upgrade-card.type-special::before{ background: var(--purple); }
+
+  .upgrade-card:hover:not(.locked) {
+    border-color: var(--accent);
+    background: #1a2135;
+    transform: translateX(2px);
+  }
+  .upgrade-card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .upgrade-card.bought {
+    background: #0a1a12;
+    border-color: #1a4a30;
+    cursor: default;
+  }
+  .upgrade-card.bought::before { background: var(--green); }
+  .upgrade-card.flash {
+    animation: cardFlash .35s ease-out;
+  }
+  @keyframes cardFlash {
+    0%   { background: #1e3a20; }
+    100% { background: var(--card); }
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .card-icon { font-size: 20px; line-height: 1; }
+  .card-name {
+    font-family: var(--font-hd);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    letter-spacing: 1px;
+  }
+  .card-count {
+    font-size: 10px;
+    background: var(--border);
+    color: var(--muted);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .card-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-cost {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .card-cost.unaffordable { color: var(--red); }
+  .card-effect {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .card-done {
+    font-size: 10px;
+    color: var(--green);
+  }
+
+  /* ── Achievements ── */
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .ach-badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 18px;
+    position: relative;
+    cursor: default;
+    transition: all .15s;
+  }
+  .ach-badge.locked { filter: grayscale(1); opacity: 0.3; }
+  .ach-badge.unlocked {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--glow);
+    animation: achUnlock .5s ease-out;
+  }
+  @keyframes achUnlock {
+    0%   { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .ach-badge .ach-tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f1422;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .ach-badge:hover .ach-tip { display: block; }
+
+  /* ── Stats ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-box-val {
+    font-family: var(--font-hd);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .stat-box-lbl {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* ── Toast notification ── */
+  #toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #1a2135;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    color: var(--accent);
+    z-index: 9999;
+    transition: transform .3s ease;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: 0 0 20px var(--glow);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Footer ── */
+  footer {
+    grid-area: footer;
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="app">
+  <!-- HEADER -->
+  <header>
+    <div class="logo">CLICK<span>EMPIRE</span></div>
+    <div class="header-stats">
+      <div>Sessão: <b id="h-session">0s</b></div>
+      <div>Total cliques: <b id="h-clicks">0</b></div>
+      <div>Total ganho: <b id="h-total">$0</b></div>
+    </div>
+    <div class="header-right">
+      <button class="btn-sm" onclick="saveGame()">💾 Salvar</button>
+      <button class="btn-sm" onclick="resetGame()">🗑️ Reset</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <!-- Money display -->
+    <div class="money-display">
+      <div class="money-label">CAPITAL ATUAL</div>
+      <div class="money-value" id="money-val">$0</div>
+      <div class="money-sub">
+        <div>+<span id="cps-val">0</span>/s automático</div>
+        <div>+<span id="cpc-val">1</span> por clique</div>
+      </div>
+    </div>
+
+    <!-- Click button -->
+    <div class="click-wrap">
+      <button class="click-btn" id="click-btn" onclick="handleClick(event)">
+        <span class="click-icon">💰</span>
+        <span>CLICAR</span>
+        <span class="click-hint" id="click-hint">+$1 por clique</span>
+      </button>
+    </div>
+
+    <!-- Progress toward next milestone -->
+    <div class="progress-section">
+      <div>
+        <div class="progress-label">
+          <span>PRÓXIMA META</span>
+          <span id="goal-label">$100</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill fill-gold" id="goal-bar" style="width:0%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="progress-label">
+          <span>PODER DE CLIQUE</span>
+          <span id="cpc-level">Nv.1</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill fill-green" id="cpc-bar" style="width:0%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="progress-label">
+          <span>GERAÇÃO AUTOMÁTICA</span>
+          <span id="cps-level">Nv.0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill fill-blue" id="cps-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid" style="width:100%">
+      <div class="stat-box">
+        <div class="stat-box-val" id="s-clicks">0</div>
+        <div class="stat-box-lbl">CLIQUES TOTAIS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-val" id="s-earned">$0</div>
+        <div class="stat-box-lbl">GANHO TOTAL</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-val" id="s-cpc">1</div>
+        <div class="stat-box-lbl">$ POR CLIQUE</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-val" id="s-cps">0</div>
+        <div class="stat-box-lbl">$ POR SEGUNDO</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Upgrades -->
+    <div class="sidebar-title">▶ UPGRADES</div>
+    <div id="upgrades-list"></div>
+
+    <!-- Achievements -->
+    <div class="sidebar-title" style="margin-top:8px">★ CONQUISTAS</div>
+    <div class="achievements-grid" id="ach-grid"></div>
+  </aside>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>Click Empire v1.0 — Progresso salvo automaticamente</span>
+    <span>Último save: <span id="last-save">nunca</span></span>
+  </footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════
+let G = {
+  money: 0,
+  totalEarned: 0,
+  totalClicks: 0,
+  clickPower: 1,    // $ per click
+  autoRate: 0,      // $ per second
+  sessionSeconds: 0,
+  upgrades: {},     // { id: count }
+};
+
+// ═══════════════════════════════════════════════════════
+// UPGRADE DEFINITIONS
+// ═══════════════════════════════════════════════════════
+const UPGRADES = [
+  // Click power
+  { id:'cursor',  type:'click',  icon:'🖱️',  name:'Cursor Turbinado',  desc:'Mais poder de clique',        baseCost:10,   costMult:1.6,  max:20, effect: g => { g.clickPower += 1; }, effectDesc:'+1 por clique' },
+  { id:'golden',  type:'click',  icon:'✋',  name:'Mão de Ouro',       desc:'Clique vale muito mais',       baseCost:80,   costMult:1.8,  max:15, effect: g => { g.clickPower += 3; }, effectDesc:'+3 por clique' },
+  { id:'cyber',   type:'click',  icon:'🤖',  name:'Cibermão',          desc:'Braço mecânico hiper-veloz',   baseCost:500,  costMult:2.0,  max:10, effect: g => { g.clickPower += 10; }, effectDesc:'+10 por clique' },
+  { id:'quantum', type:'click',  icon:'⚛️',  name:'Clique Quântico',   desc:'Superposta em todos estados',  baseCost:5000, costMult:2.2,  max:8,  effect: g => { g.clickPower += 50; }, effectDesc:'+50 por clique' },
+
+  // Auto income
+  { id:'intern',  type:'auto',   icon:'👶',  name:'Estagiário',        desc:'Trabalha por trocados',        baseCost:15,   costMult:1.5,  max:99, effect: g => { g.autoRate += 0.5; }, effectDesc:'+0.5/s' },
+  { id:'dev',     type:'auto',   icon:'💻',  name:'Desenvolvedor',     desc:'Código que gera dinheiro',     baseCost:100,  costMult:1.6,  max:50, effect: g => { g.autoRate += 2; }, effectDesc:'+2/s' },
+  { id:'server',  type:'auto',   icon:'🖥️',  name:'Servidor',          desc:'Roda 24/7 sem parar',          baseCost:600,  costMult:1.7,  max:30, effect: g => { g.autoRate += 8; }, effectDesc:'+8/s' },
+  { id:'datactr', type:'auto',   icon:'🏢',  name:'Data Center',       desc:'Fazenda de servidores',        baseCost:3000, costMult:1.8,  max:20, effect: g => { g.autoRate += 30; }, effectDesc:'+30/s' },
+  { id:'ai',      type:'auto',   icon:'🧠',  name:'IA Lucrativa',      desc:'A IA trabalha por você',       baseCost:15000,costMult:1.9,  max:10, effect: g => { g.autoRate += 120; }, effectDesc:'+120/s' },
+  { id:'mine',    type:'auto',   icon:'⛏️',  name:'Mineradora Crypto', desc:'Bitcoin nunca para',           baseCost:80000,costMult:2.0,  max:8,  effect: g => { g.autoRate += 500; }, effectDesc:'+500/s' },
+
+  // Multipliers (max:1 = one-time)
+  { id:'turbo1',  type:'multi',  icon:'⚡',  name:'Modo Turbo I',      desc:'Dobra a renda automática',     baseCost:2000, costMult:1,    max:1,  effect: g => { g.autoRate *= 2; }, effectDesc:'×2 auto' },
+  { id:'turbo2',  type:'multi',  icon:'🌩️', name:'Modo Turbo II',     desc:'Triplica a renda automática',  baseCost:20000,costMult:1,    max:1,  effect: g => { g.autoRate *= 3; }, effectDesc:'×3 auto' },
+  { id:'lucky1',  type:'multi',  icon:'🍀',  name:'Trevo da Sorte',    desc:'Dobra o poder de clique',      baseCost:1000, costMult:1,    max:1,  effect: g => { g.clickPower *= 2; }, effectDesc:'×2 clique' },
+  { id:'lucky2',  type:'multi',  icon:'💎',  name:'Diamante Bruto',    desc:'Triplica o clique',            baseCost:10000,costMult:1,    max:1,  effect: g => { g.clickPower *= 3; }, effectDesc:'×3 clique' },
+
+  // Special
+  { id:'angel',   type:'special',icon:'😇',  name:'Investidor Anjo',   desc:'Injeta capital inicial',       baseCost:500,  costMult:3.0,  max:5,  effect: g => { g.money += 1000; g.totalEarned += 1000; }, effectDesc:'+$1000 agora' },
+  { id:'megadeal',type:'special',icon:'🤝',  name:'Mega Negócio',      desc:'O negócio do século',          baseCost:50000,costMult:5.0,  max:3,  effect: g => { g.money += 100000; g.totalEarned += 100000; }, effectDesc:'+$100k agora' },
+];
+
+// ═══════════════════════════════════════════════════════
+// ACHIEVEMENT DEFINITIONS
+// ═══════════════════════════════════════════════════════
+const ACHIEVEMENTS = [
+  { id:'first_click', icon:'👆', name:'Primeiro Clique',   desc:'Clique pela primeira vez',        check: g => g.totalClicks >= 1 },
+  { id:'clicks_10',   icon:'🖐️', name:'Dedo Ágil',        desc:'100 cliques totais',              check: g => g.totalClicks >= 100 },
+  { id:'clicks_100',  icon:'⚡', name:'Clickzilla',        desc:'1.000 cliques totais',            check: g => g.totalClicks >= 1000 },
+  { id:'clicks_1k',   icon:'🌪️', name:'Furioso',           desc:'10.000 cliques',                  check: g => g.totalClicks >= 10000 },
+  { id:'earn_100',    icon:'💵', name:'Primeira Nota',     desc:'Ganhe $100 no total',             check: g => g.totalEarned >= 100 },
+  { id:'earn_1k',     icon:'💴', name:'Milhar',            desc:'Ganhe $1.000 no total',           check: g => g.totalEarned >= 1000 },
+  { id:'earn_10k',    icon:'💶', name:'Dez Mil',           desc:'Ganhe $10.000 no total',          check: g => g.totalEarned >= 10000 },
+  { id:'earn_100k',   icon:'💷', name:'Cem Mil',           desc:'Ganhe $100.000 no total',         check: g => g.totalEarned >= 100000 },
+  { id:'earn_1m',     icon:'🏆', name:'Milionário',        desc:'Ganhe $1.000.000 no total',       check: g => g.totalEarned >= 1000000 },
+  { id:'auto_1',      icon:'🤖', name:'Passivo',           desc:'1$/s de renda automática',        check: g => g.autoRate >= 1 },
+  { id:'auto_100',    icon:'🏭', name:'Fábrica',           desc:'100$/s de renda automática',      check: g => g.autoRate >= 100 },
+  { id:'auto_1k',     icon:'🌆', name:'Império',           desc:'1000$/s de renda automática',     check: g => g.autoRate >= 1000 },
+  { id:'cpc_10',      icon:'🔥', name:'Clique de Fogo',    desc:'+10 por clique',                  check: g => g.clickPower >= 10 },
+  { id:'cpc_100',     icon:'💥', name:'Mega Clique',       desc:'+100 por clique',                 check: g => g.clickPower >= 100 },
+  { id:'upg_5',       icon:'📈', name:'Investidor',        desc:'Compre 5 upgrades',               check: g => Object.values(g.upgrades).reduce((a,b)=>a+b,0) >= 5 },
+  { id:'upg_20',      icon:'📊', name:'Fundo de Ações',    desc:'Compre 20 upgrades',              check: g => Object.values(g.upgrades).reduce((a,b)=>a+b,0) >= 20 },
+];
+
+// ═══════════════════════════════════════════════════════
+// UNLOCKED ACHIEVEMENTS TRACKING
+// ═══════════════════════════════════════════════════════
+let unlockedAch = {};
+
+// ═══════════════════════════════════════════════════════
+// AUDIO CONTEXT (simple beeps)
+// ═══════════════════════════════════════════════════════
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBeep(freq=520, dur=0.06, type='sine', vol=0.12) {
+  try {
+    const ac = getAudio();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ac.currentTime);
+    gain.gain.setValueAtTime(vol, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.start(ac.currentTime);
+    osc.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+function playClickSound() { playBeep(600, 0.05, 'triangle', 0.1); }
+function playBuySound()   { playBeep(800, 0.12, 'sine', 0.15); setTimeout(()=>playBeep(1000,0.08,'sine',0.1),80); }
+function playAchSound()   { [600,800,1000,1200].forEach((f,i)=>setTimeout(()=>playBeep(f,0.15,'sine',0.18),i*80)); }
+
+// ═══════════════════════════════════════════════════════
+// FORMATTING
+// ═══════════════════════════════════════════════════════
+function fmt(n) {
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2)  + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(2)  + 'M';
+  if (n >= 1e3)  return '$' + (n/1e3).toFixed(1)  + 'K';
+  return '$' + Math.floor(n);
+}
+function fmtNum(n) {
+  if (n >= 1e9)  return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3)  return (n/1e3).toFixed(1)+'K';
+  return Math.floor(n).toString();
+}
+
+// ═══════════════════════════════════════════════════════
+// UPGRADE COST CALCULATION
+// ═══════════════════════════════════════════════════════
+function upgradeCost(upg) {
+  const count = G.upgrades[upg.id] || 0;
+  return Math.floor(upg.baseCost * Math.pow(upg.costMult, count));
+}
+
+// ═══════════════════════════════════════════════════════
+// CLICK HANDLER
+// ═══════════════════════════════════════════════════════
+function handleClick(e) {
+  // Add money
+  G.money += G.clickPower;
+  G.totalEarned += G.clickPower;
+  G.totalClicks++;
+
+  playClickSound();
+
+  // Ripple effect
+  const btn = document.getElementById('click-btn');
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const size = 120;
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${rect.width/2-size/2}px;top:${rect.height/2-size/2}px`;
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 500);
+
+  // Floating text
+  const ft = document.createElement('div');
+  ft.className = 'float-text';
+  ft.textContent = '+' + fmt(G.clickPower);
+  ft.style.left = (e.clientX - 20) + 'px';
+  ft.style.top  = (e.clientY - 20) + 'px';
+  document.body.appendChild(ft);
+  setTimeout(() => ft.remove(), 850);
+
+  // Bump money display
+  const mv = document.getElementById('money-val');
+  mv.classList.add('bump');
+  setTimeout(() => mv.classList.remove('bump'), 100);
+
+  checkAchievements();
+  updateUI();
+}
+
+// ═══════════════════════════════════════════════════════
+// BUY UPGRADE
+// ═══════════════════════════════════════════════════════
+function buyUpgrade(id) {
+  const upg = UPGRADES.find(u => u.id === id);
+  if (!upg) return;
+  const count = G.upgrades[id] || 0;
+  if (count >= upg.max) return;
+  const cost = upgradeCost(upg);
+  if (G.money < cost) { showToast('💸 Dinheiro insuficiente!'); return; }
+
+  G.money -= cost;
+  G.upgrades[id] = count + 1;
+  upg.effect(G);
+
+  playBuySound();
+
+  // Flash the card
+  const card = document.querySelector(`[data-id="${id}"]`);
+  if (card) { card.classList.add('flash'); setTimeout(()=>card.classList.remove('flash'), 350); }
+
+  checkAchievements();
+  renderUpgrades();
+  updateUI();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER UPGRADES
+// ═══════════════════════════════════════════════════════
+function renderUpgrades() {
+  const container = document.getElementById('upgrades-list');
+  container.innerHTML = '';
+
+  UPGRADES.forEach(upg => {
+    const count = G.upgrades[upg.id] || 0;
+    const maxed = count >= upg.max;
+    const cost = upgradeCost(upg);
+    const canAfford = G.money >= cost;
+
+    const card = document.createElement('div');
+    card.className = `upgrade-card type-${upg.type}${maxed ? ' bought' : (!canAfford ? ' locked' : '')}`;
+    card.setAttribute('data-id', upg.id);
+    if (!maxed) card.onclick = () => buyUpgrade(upg.id);
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-icon">${upg.icon}</span>
+        <span class="card-name">${upg.name}</span>
+        ${upg.max > 1 ? `<span class="card-count">${count}/${upg.max}</span>` : ''}
+      </div>
+      <div class="card-desc">${upg.desc}</div>
+      <div class="card-bottom">
+        ${maxed
+          ? `<span class="card-done">✓ Completo</span>`
+          : `<span class="card-cost ${canAfford?'':'unaffordable'}">${fmt(cost)}</span>`
+        }
+        <span class="${maxed?'card-done':'card-effect'}">${upg.effectDesc}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════
+function renderAchievements() {
+  const grid = document.getElementById('ach-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(ach => {
+    const unlocked = !!unlockedAch[ach.id];
+    const div = document.createElement('div');
+    div.className = `ach-badge ${unlocked ? 'unlocked' : 'locked'}`;
+    div.innerHTML = `${ach.icon}<div class="ach-tip">${ach.name}<br>${ach.desc}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHECK ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════
+function checkAchievements() {
+  let newUnlock = false;
+  ACHIEVEMENTS.forEach(ach => {
+    if (!unlockedAch[ach.id] && ach.check(G)) {
+      unlockedAch[ach.id] = true;
+      newUnlock = true;
+      showToast(`★ Conquista: ${ach.icon} ${ach.name}`);
+      playAchSound();
+    }
+  });
+  if (newUnlock) renderAchievements();
+}
+
+// ═══════════════════════════════════════════════════════
+// UPDATE UI
+// ═══════════════════════════════════════════════════════
+
+// Milestone goals array
+const GOALS = [100,500,1000,5000,10000,50000,100000,500000,1000000,5000000,10000000,Infinity];
+
+function updateUI() {
+  document.getElementById('money-val').textContent  = fmt(G.money);
+  document.getElementById('cps-val').textContent    = fmtNum(G.autoRate);
+  document.getElementById('cpc-val').textContent    = fmtNum(G.clickPower);
+  document.getElementById('click-hint').textContent = `+${fmt(G.clickPower)} por clique`;
+
+  // Header stats
+  document.getElementById('h-clicks').textContent = fmtNum(G.totalClicks);
+  document.getElementById('h-total').textContent  = fmt(G.totalEarned);
+
+  // Stat boxes
+  document.getElementById('s-clicks').textContent = fmtNum(G.totalClicks);
+  document.getElementById('s-earned').textContent = fmt(G.totalEarned);
+  document.getElementById('s-cpc').textContent    = fmtNum(G.clickPower);
+  document.getElementById('s-cps').textContent    = fmtNum(G.autoRate);
+
+  // Progress: goal
+  const goal = GOALS.find(g => g > G.totalEarned) || GOALS[GOALS.length-2];
+  const prevGoal = (() => { const idx = GOALS.indexOf(goal); return idx > 0 ? GOALS[idx-1] : 0; })();
+  const goalPct = goal === Infinity ? 100 : Math.min(100, ((G.totalEarned - prevGoal) / (goal - prevGoal)) * 100);
+  document.getElementById('goal-bar').style.width   = goalPct + '%';
+  document.getElementById('goal-label').textContent = goal === Infinity ? 'MAX' : fmt(goal);
+
+  // Progress: click power (scale up to 1000)
+  document.getElementById('cpc-bar').style.width   = Math.min(100, (G.clickPower / 1000) * 100) + '%';
+  document.getElementById('cpc-level').textContent = 'Nv.' + Math.floor(Math.log2(G.clickPower + 1));
+
+  // Progress: auto rate (scale up to 5000)
+  document.getElementById('cps-bar').style.width   = Math.min(100, (G.autoRate / 5000) * 100) + '%';
+  document.getElementById('cps-level').textContent = 'Nv.' + Math.floor(Math.log2(G.autoRate + 1));
+
+  // Update card affordability without full re-render
+  document.querySelectorAll('.upgrade-card:not(.bought)').forEach(card => {
+    const id = card.getAttribute('data-id');
+    const upg = UPGRADES.find(u => u.id === id);
+    if (!upg) return;
+    const cost = upgradeCost(upg);
+    const canAfford = G.money >= cost;
+    card.classList.toggle('locked', !canAfford);
+    const costEl = card.querySelector('.card-cost');
+    if (costEl) costEl.classList.toggle('unaffordable', !canAfford);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// IDLE LOOP (runs every 100ms for smooth $)
+// ═══════════════════════════════════════════════════════
+setInterval(() => {
+  if (G.autoRate > 0) {
+    const tick = G.autoRate / 10;
+    G.money += tick;
+    G.totalEarned += tick;
+  }
+  updateUI();
+}, 100);
+
+// Session timer (every second)
+setInterval(() => {
+  G.sessionSeconds++;
+  const s = G.sessionSeconds;
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  document.getElementById('h-session').textContent =
+    h>0 ? `${h}h${m}m${sec}s` : m>0 ? `${m}m${sec}s` : `${sec}s`;
+  checkAchievements();
+}, 1000);
+
+// Auto-save every 30 seconds
+setInterval(() => saveGame(), 30000);
+
+// ═══════════════════════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════════════════════
+function saveGame() {
+  const data = { G, unlockedAch, savedAt: Date.now() };
+  localStorage.setItem('click_empire_save', JSON.stringify(data));
+  const now = new Date();
+  document.getElementById('last-save').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0') + ':' +
+    now.getSeconds().toString().padStart(2,'0');
+  showToast('💾 Progresso salvo!');
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('click_empire_save');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.G) {
+      // Merge carefully
+      G.money       = data.G.money       || 0;
+      G.totalEarned = data.G.totalEarned || 0;
+      G.totalClicks = data.G.totalClicks || 0;
+      G.clickPower  = data.G.clickPower  || 1;
+      G.autoRate    = data.G.autoRate    || 0;
+      G.upgrades    = data.G.upgrades    || {};
+      G.sessionSeconds = 0;
+
+      // Offline income
+      if (data.savedAt && G.autoRate > 0) {
+        const offlineSecs = Math.min((Date.now() - data.savedAt) / 1000, 3600); // max 1h offline
+        if (offlineSecs > 5) {
+          const bonus = G.autoRate * offlineSecs;
+          G.money += bonus;
+          G.totalEarned += bonus;
+          showToast(`⏰ Renda offline: ${fmt(bonus)} (${Math.floor(offlineSecs)}s)`);
+        }
+      }
+    }
+    if (data.unlockedAch) unlockedAch = data.unlockedAch;
+  } catch(e) {
+    console.warn('Erro ao carregar save:', e);
+  }
+}
+
+function resetGame() {
+  if (!confirm('Tem certeza? Todo o progresso será perdido!')) return;
+  localStorage.removeItem('click_empire_save');
+  G = { money:0, totalEarned:0, totalClicks:0, clickPower:1, autoRate:0, sessionSeconds:0, upgrades:{} };
+  unlockedAch = {};
+  renderUpgrades();
+  renderAchievements();
+  updateUI();
+  showToast('🗑️ Jogo reiniciado!');
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+loadGame();
+renderUpgrades();
+renderAchievements();
+updateUI();
+</script>
+</body>
+</html>
